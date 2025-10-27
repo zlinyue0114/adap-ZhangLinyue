@@ -18,9 +18,51 @@ export class Name {
     private delimiter: string = DEFAULT_DELIMITER;
     private components: string[] = [];
 
+     /** escape delimiter & ESCAPE in a raw component */
+    private static mask(raw: string, delimiter: string): string {
+    const esc = ESCAPE_CHARACTER;
+    let out = '';
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw[i];
+      if (ch === esc || ch === delimiter) out += esc;
+      out += ch;
+    }
+    return out;
+    }
+    /** unescape a masked component with respect to delimiter */
+    private static unmask(masked: string, delimiter: string): string {
+    const esc = ESCAPE_CHARACTER;
+    let out = '';
+    for (let i = 0; i < masked.length; i++) {
+      const ch = masked[i];
+      if (ch === esc) {
+        // take next char verbatim if exists
+        if (i + 1 < masked.length) {
+          out += masked[i + 1];
+          i++;
+        } else {
+          // trailing ESCAPE => keep as literal ESCAPE
+          out += esc;
+        }
+      } else {
+        out += ch;
+      }
+    }
+    return out;
+    }
+
+    private checkIndex(i: number, allowEnd = false) {
+    const n = this.components.length;
+    const ok = allowEnd ? (i >= 0 && i <= n) : (i >= 0 && i < n);
+    if (!ok) throw new RangeError(`Index ${i} out of bounds [0, ${allowEnd ? n : n - 1}]`);
+   }
+
     /** Expects that all Name components are properly masked */
     constructor(other: string[], delimiter?: string) {
-        throw new Error("needs implementation or deletion");
+    if (!Array.isArray(other)) throw new TypeError('other must be string[]');
+    this.delimiter = delimiter ?? DEFAULT_DELIMITER;
+    // store *as is* (masked w.r.t. this.delimiter)
+    this.components = other.slice();
     }
 
     /**
@@ -29,7 +71,8 @@ export class Name {
      * Users can vary the delimiter character to be used
      */
     public asString(delimiter: string = this.delimiter): string {
-        throw new Error("needs implementation or deletion");
+    const raw = this.components.map(c => Name.unmask(c, this.delimiter));
+    return raw.join(delimiter);
     }
 
     /** 
@@ -38,36 +81,42 @@ export class Name {
      * The special characters in the data string are the default characters
      */
     public asDataString(): string {
-        throw new Error("needs implementation or deletion");
+    const raw = this.components.map(c => Name.unmask(c, this.delimiter));
+    const remasked = raw.map(r => Name.mask(r, DEFAULT_DELIMITER));
+    return remasked.join(DEFAULT_DELIMITER);;
     }
 
     /** Returns properly masked component string */
     public getComponent(i: number): string {
-        throw new Error("needs implementation or deletion");
+    this.checkIndex(i);
+    return this.components[i];
     }
 
     /** Expects that new Name component c is properly masked */
     public setComponent(i: number, c: string): void {
-        throw new Error("needs implementation or deletion");
+    this.checkIndex(i);
+    this.components[i] = c;
     }
 
      /** Returns number of components in Name instance */
      public getNoComponents(): number {
-        throw new Error("needs implementation or deletion");
+    return this.components.length;
     }
 
     /** Expects that new Name component c is properly masked */
     public insert(i: number, c: string): void {
-        throw new Error("needs implementation or deletion");
+    this.checkIndex(i, /*allowEnd*/ true);
+    this.components.splice(i, 0, c);
     }
 
     /** Expects that new Name component c is properly masked */
     public append(c: string): void {
-        throw new Error("needs implementation or deletion");
+    this.components.push(c);
     }
 
     public remove(i: number): void {
-        throw new Error("needs implementation or deletion");
+    this.checkIndex(i);
+    this.components.splice(i, 1);
     }
 
 }
