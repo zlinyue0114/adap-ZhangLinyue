@@ -18,7 +18,7 @@ export class Name {
     private delimiter: string = DEFAULT_DELIMITER;
     private components: string[] = [];
 
-     /** escape delimiter & ESCAPE in a raw component */
+    // @methodtype helper-method
     private static mask(raw: string, delimiter: string): string {
     const esc = ESCAPE_CHARACTER;
     let out = '';
@@ -29,7 +29,8 @@ export class Name {
     }
     return out;
     }
-    /** unescape a masked component with respect to delimiter */
+
+    // @methodtype helper-method
     private static unmask(masked: string, delimiter: string): string {
     const esc = ESCAPE_CHARACTER;
     let out = '';
@@ -50,14 +51,15 @@ export class Name {
     }
     return out;
     }
-
+    
+    // @methodtype helper-method
     private checkIndex(i: number, allowEnd = false) {
     const n = this.components.length;
     const ok = allowEnd ? (i >= 0 && i <= n) : (i >= 0 && i < n);
     if (!ok) throw new RangeError(`Index ${i} out of bounds [0, ${allowEnd ? n : n - 1}]`);
    }
 
-    /** Expects that all Name components are properly masked */
+    // @methodtype constructor
     constructor(other: string[], delimiter?: string) {
     if (!Array.isArray(other)) throw new TypeError('other must be string[]');
     this.delimiter = delimiter ?? DEFAULT_DELIMITER;
@@ -65,55 +67,48 @@ export class Name {
     this.components = other.slice();
     }
 
-    /**
-     * Returns a human-readable representation of the Name instance using user-set special characters
-     * Special characters are not escaped (creating a human-readable string)
-     * Users can vary the delimiter character to be used
-     */
+    // @methodtype get-method
     public asString(delimiter: string = this.delimiter): string {
     const raw = this.components.map(c => Name.unmask(c, this.delimiter));
     return raw.join(delimiter);
     }
 
-    /** 
-     * Returns a machine-readable representation of Name instance using default special characters
-     * Machine-readable means that from a data string, a Name can be parsed back in
-     * The special characters in the data string are the default characters
-     */
+    // @methodtype get-method
     public asDataString(): string {
     const raw = this.components.map(c => Name.unmask(c, this.delimiter));
     const remasked = raw.map(r => Name.mask(r, DEFAULT_DELIMITER));
     return remasked.join(DEFAULT_DELIMITER);;
     }
 
-    /** Returns properly masked component string */
+    // @methodtype get-method
     public getComponent(i: number): string {
     this.checkIndex(i);
     return this.components[i];
     }
 
-    /** Expects that new Name component c is properly masked */
+    // @methodtype set-method
     public setComponent(i: number, c: string): void {
     this.checkIndex(i);
     this.components[i] = c;
     }
 
-     /** Returns number of components in Name instance */
+    // @methodtype get-method
      public getNoComponents(): number {
     return this.components.length;
     }
 
-    /** Expects that new Name component c is properly masked */
+    // @methodtype add-method
     public insert(i: number, c: string): void {
     this.checkIndex(i, /*allowEnd*/ true);
     this.components.splice(i, 0, c);
     }
 
-    /** Expects that new Name component c is properly masked */
+    // @methodtype add-method
     public append(c: string): void {
     this.components.push(c);
     }
-
+    
+    // @methodtype remove-method
     public remove(i: number): void {
     this.checkIndex(i);
     this.components.splice(i, 1);
