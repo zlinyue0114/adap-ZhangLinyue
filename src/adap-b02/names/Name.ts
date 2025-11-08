@@ -13,7 +13,9 @@ import { Printable } from "../common/Printable";
  * "Oh\.\.\." is a name with one component, if the delimiter character is '.'.
  */
 export interface Name extends Printable {
-
+    asString(delimiter?: string): string;
+    asDataString(): string;
+    getDelimiterCharacter(): string;
     /**
      * Returns true, if number of components == 0; else false
      */
