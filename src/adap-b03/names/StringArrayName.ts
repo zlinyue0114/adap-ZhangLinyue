@@ -1,5 +1,4 @@
 import { DEFAULT_DELIMITER, ESCAPE_CHARACTER } from "../common/Printable";
-import { Name } from "./Name";
 import { AbstractName } from "./AbstractName";
 
 export class StringArrayName extends AbstractName {
@@ -7,63 +6,80 @@ export class StringArrayName extends AbstractName {
     protected components: string[] = [];
 
     constructor(source: string[], delimiter?: string) {
-        super();
-        throw new Error("needs implementation or deletion");
+        super(delimiter);
+        if (!Array.isArray(source)) throw new TypeError("source must be string[]");
+        this.components = source.slice();
     }
 
-    public clone(): Name {
-        throw new Error("needs implementation or deletion");
+    protected createEmptyWithDelimiter(delimiter: string): StringArrayName {
+        return new StringArrayName([], delimiter);
+    }
+
+    private static mask(raw: string, delimiter: string): string {
+        const esc = ESCAPE_CHARACTER;
+        let out = "";
+        for (let i = 0; i < raw.length; i++) {
+            const ch = raw[i];
+            if (ch === esc || ch === delimiter) out += esc;
+            out += ch;
+        }
+        return out;
+    }
+
+    private static unmask(masked: string, delimiter: string): string {
+        const esc = ESCAPE_CHARACTER;
+        let out = "";
+        for (let i = 0; i < masked.length; i++) {
+            const ch = masked[i];
+            if (ch === esc) {
+                if (i + 1 < masked.length) { out += masked[i + 1]; i++; }
+                else out += esc;
+            } else out += ch;
+        }
+        return out;
+    }
+
+    private checkIndex(i: number, allowEnd = false) {
+        const n = this.components.length;
+        const ok = allowEnd ? (i >= 0 && i <= n) : (i >= 0 && i < n);
+        if (!ok) throw new RangeError(`Index ${i} out of bounds`);
     }
 
     public asString(delimiter: string = this.delimiter): string {
-        throw new Error("needs implementation or deletion");
+        const raw = this.components.map(c => StringArrayName.unmask(c, this.delimiter));
+        return raw.join(delimiter);
     }
-
     public asDataString(): string {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public isEqual(other: Name): boolean {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public getHashCode(): number {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public isEmpty(): boolean {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public getDelimiterCharacter(): string {
-        throw new Error("needs implementation or deletion");
+        const raw = this.components.map(c => StringArrayName.unmask(c, this.delimiter));
+        const remasked = raw.map(r => StringArrayName.mask(r, DEFAULT_DELIMITER));
+        return remasked.join(DEFAULT_DELIMITER);
     }
 
     public getNoComponents(): number {
-        throw new Error("needs implementation or deletion");
+        return this.components.length;
     }
 
     public getComponent(i: number): string {
-        throw new Error("needs implementation or deletion");
+        this.checkIndex(i);
+        return this.components[i];
     }
 
-    public setComponent(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+    public setComponent(i: number, c: string): void {
+        this.checkIndex(i);
+        this.components[i] = c;
     }
 
-    public insert(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+    public insert(i: number, c: string): void {
+        this.checkIndex(i, true);
+        this.components.splice(i, 0, c);
     }
 
-    public append(c: string) {
-        throw new Error("needs implementation or deletion");
+    public append(c: string): void {
+        this.components.push(c);
     }
 
-    public remove(i: number) {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public concat(other: Name): void {
-        throw new Error("needs implementation or deletion");
+    public remove(i: number): void {
+        this.checkIndex(i);
+        this.components.splice(i, 1);
     }
 }
