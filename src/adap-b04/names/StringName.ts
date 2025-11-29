@@ -7,65 +7,146 @@ export class StringName extends AbstractName {
     protected name: string = "";
     protected noComponents: number = 0;
 
-    constructor(source: string, delimiter?: string) {
-        super();
-        throw new Error("needs implementation or deletion");
+    constructor(source: string, delimiter: string = DEFAULT_DELIMITER) {
+        super(delimiter);
+        this.name = source ?? "";
+        this.noComponents = this.splitMasked().length;
+        this.assertClassInvariants();
     }
 
     public clone(): Name {
-        throw new Error("needs implementation or deletion");
+        const cloned = this.createEmptyWithDelimiter(this.delimiter);
+        const parts = this.splitMasked();
+        for (const part of parts) cloned.append(part);
+        return cloned;
     }
 
     public asString(delimiter: string = this.delimiter): string {
-        throw new Error("needs implementation or deletion");
+        return super.asString(delimiter);
     }
 
     public asDataString(): string {
-        throw new Error("needs implementation or deletion");
+        return super.asDataString();
     }
 
     public isEqual(other: Name): boolean {
-        throw new Error("needs implementation or deletion");
+        return super.isEqual(other);
     }
 
     public getHashCode(): number {
-        throw new Error("needs implementation or deletion");
+        return super.getHashCode();
     }
 
     public isEmpty(): boolean {
-        throw new Error("needs implementation or deletion");
+        return this.noComponents === 0;
     }
 
     public getDelimiterCharacter(): string {
-        throw new Error("needs implementation or deletion");
+        return this.delimiter;
     }
 
     public getNoComponents(): number {
-        throw new Error("needs implementation or deletion");
+        return this.noComponents;
     }
 
     public getComponent(i: number): string {
-        throw new Error("needs implementation or deletion");
+        return super.getComponent(i);
     }
 
     public setComponent(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+        super.setComponent(i, c);
     }
 
     public insert(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+        super.insert(i, c);
     }
 
     public append(c: string) {
-        throw new Error("needs implementation or deletion");
+        super.append(c);
     }
 
     public remove(i: number) {
-        throw new Error("needs implementation or deletion");
+        super.remove(i);
     }
 
     public concat(other: Name): void {
-        throw new Error("needs implementation or deletion");
+        super.concat(other);
     }
 
+    protected createEmptyWithDelimiter(delimiter: string): AbstractName {
+        return new StringName("", delimiter);
+    }
+
+    protected doGetComponent(i: number): string {
+        const parts = this.splitMasked();
+        return parts[i];
+    }
+
+    protected doSetComponent(i: number, c: string): void {
+        const parts = this.splitMasked();
+        parts[i] = c;
+        this.setFromMaskedParts(parts);
+    }
+
+    protected doInsert(i: number, c: string): void {
+        const parts = this.splitMasked();
+        parts.splice(i, 0, c);
+        this.setFromMaskedParts(parts);
+    }
+
+    protected doAppend(c: string): void {
+        const parts = this.splitMasked();
+        parts.push(c);
+        this.setFromMaskedParts(parts);
+    }
+
+    protected doRemove(i: number): void {
+        const parts = this.splitMasked();
+        parts.splice(i, 1);
+        this.setFromMaskedParts(parts);
+    }
+
+    private splitMasked(): string[] {
+        if (this.name === "") return [];
+
+        const d = this.delimiter;
+        const esc = ESCAPE_CHARACTER;
+
+        const parts: string[] = [];
+        let cur = "";
+
+        for (let i = 0; i < this.name.length; i++) {
+            const ch = this.name[i];
+            if (ch === esc) {
+                if (i + 1 < this.name.length) {
+                    cur += this.name[i + 1];
+                    i++;
+                } else {
+                    cur += esc;
+                }
+            } else if (ch === d) {
+                const masked = this.mask(this.unmask(cur), d);
+                parts.push(masked);
+                cur = "";
+            } else {
+                cur += ch;
+            }
+        }
+        const finalMasked = this.mask(this.unmask(cur), d);
+        parts.push(finalMasked);
+
+        return parts;
+    }
+
+    private joinMasked(parts: string[]): string {
+        return parts.join(this.delimiter);
+    }
+
+    private setFromMaskedParts(masked: string[]): void {
+        this.name = this.joinMasked(masked);
+        this.noComponents = masked.length;
+
+        // enforce invariants after mutation
+        this.assertClassInvariants();
+    }
 }
