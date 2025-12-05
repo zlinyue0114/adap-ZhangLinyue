@@ -20,4 +20,17 @@ export class Directory extends Node {
         this.childNodes.delete(cn); // Yikes! Should have been called remove
     }
 
+    public override findNodes(bn: string): Set<Node> {
+        const result = super.findNodes(bn);
+
+        for (const child of this.childNodes) {
+            const sub = child.findNodes(bn);
+            for (const item of sub) {
+                result.add(item);
+            }
+        }
+
+        return result;
+    }
+
 }

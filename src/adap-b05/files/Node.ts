@@ -1,5 +1,7 @@
+import { Exception } from "../common/Exception";
 import { IllegalArgumentException } from "../common/IllegalArgumentException";
 import { InvalidStateException } from "../common/InvalidStateException";
+import { ServiceFailureException } from "../common/ServiceFailureException";
 
 import { Name } from "../names/Name";
 import { Directory } from "./Directory";
@@ -52,12 +54,41 @@ export class Node {
         return this.parentNode;
     }
 
-    /**
-     * Returns all nodes in the tree that match bn
-     * @param bn basename of node being searched for
+     /**
+     * Recursive search for nodes with basename bn
+     * Must also detect buggy file states and throw exception
      */
     public findNodes(bn: string): Set<Node> {
-        throw new Error("needs implementation or deletion");
+        const result = new Set<Node>();
+
+        try {
+            const current = this.getBaseName();
+
+            // Detect faulty BuggyFile behavior
+            if (current === "") {
+                throw new InvalidStateException("Invalid base name");
+            }
+
+            if (current === bn) {
+                result.add(this);
+            }
+
+            return result;
+
+        } catch (ex) {
+
+            let trigger: Exception;
+
+            if (ex instanceof Exception) {
+                trigger = ex;
+            } else {
+                // Convert JS errors or unknown throwables to an Exception
+                trigger = new InvalidStateException("Unknown error", ex as any);
+            }
+
+            throw new ServiceFailureException("findNodes failed", trigger);
+        }
+
     }
 
 }
